@@ -362,16 +362,27 @@ angular.module('ngFormioGrid', [
               $scope.$emit('onRequest:' + $scope.gridOptionsDef.namespace, $scope.query);
               formio.loadSubmissions({params: $scope.query}, $scope.gridOptionsDef.loadOptions).then(function(submissions) {
                 $scope.gridOptionsDef.totalItems = submissions.serverCount;
-                $scope.gridOptionsDef.data = submissions;
-                setTableHeight(submissions.length);
-                setLoading(false);
-                $scope.$emit("onData", submissions);
-                $scope.$emit('onData:' + $scope.gridOptionsDef.namespace, submissions);
+                $scope.gridOptionsDef.data = submissions;                
+                if ($scope.gridOptionsDef.customAction) {
+                  $scope.gridOptionsDef.customAction($scope).then(function() {
+                    finalizeLoading(submissions);
+                  });                
+                } 
+                else {
+                  finalizeLoading(submissions);
+                }
               });
             }
           });
         };
 
+        var finalizeLoading = function(submissions) {         
+            setTableHeight(submissions.length);
+            setLoading(false);
+            $scope.$emit("onData", submissions);
+            $scope.$emit('onData:' + $scope.gridOptionsDef.namespace, submissions);
+        }
+        
         var setTableHeight = function(renderableRows) {
           $timeout(function() {
             var newHeight = ($scope.gridOptions && $scope.gridOptions.height) ? $scope.gridOptions.height : ($scope.gridApi.grid.getVisibleRowCount() * 30) + 100;
